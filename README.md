@@ -1,4 +1,3 @@
-![image](https://github.com/user-attachments/assets/d88af28e-b7c4-4c01-a86e-c8de3b21c3ba)## Project Structure
 
 ```
 simple-compass-app

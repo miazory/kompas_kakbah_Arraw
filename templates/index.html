@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Compass with Kaaba Direction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f5f5;}
+        #compass-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+        }
+        #compass {
+            width: 100%;
+            height: 100%;
+            border: 8px solid #333;
+            border-radius: 50%;
+            background: #fafafa;
+            position: relative;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        .direction {
+            position: absolute;
+            font-size: 2em;
+            font-weight: bold;
+            color: #222;
+            user-select: none;
+        }
+        #north { top: 10px; left: 50%; transform: translateX(-50%); }
+        #east { right: 10px; top: 50%; transform: translateY(-50%); }
+        #south { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        #west { left: 10px; top: 50%; transform: translateY(-50%); }
+        #needle {
+            position: absolute;
+            width: 8px;
+            height: 120px;
+            background: red;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -100%) rotate(0deg);
+            transform-origin: 50% 100%;
+            border-radius: 4px;
+            z-index: 2;
+            box-shadow: 0 0 8px #f00a;
+        }
+        #needle-kaaba {
+            position: absolute;
+            width: 8px;
+            height: 100px;
+            background: green;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -100%) rotate(0deg);
+            transform-origin: 50% 100%;
+            border-radius: 4px;
+            z-index: 1;
+            opacity: 0.8;
+            box-shadow: 0 0 8px #0f08;
+        }
+        #info {
+            margin-top: 20px;
+            color: #555;
+            font-size: 1em;
+            text-align: center;
+        }
+        #permission-btn {
+            margin-top: 20px;
+            padding: 10px 24px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            background: #007bff;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 8px #007bff22;
+        }
+        #permission-btn:active {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div id="compass-container">
+        <div id="compass">
+            <div class="direction" id="north">N</div>
+            <div class="direction" id="east">E</div>
+            <div class="direction" id="south">S</div>
+            <div class="direction" id="west">W</div>
+            <div id="needle"></div>
+            <div id="needle-kaaba"></div>
+        </div>
+    </div>
+    <button id="permission-btn">Aktifkan Kompas</button>
+    <div id="info">
+        Klik tombol di atas dan izinkan akses sensor & lokasi.<br>
+        Jarum <span style="color:red">merah</span> = utara.<br>
+        Jarum <span style="color:green">hijau</span> = arah Kakbah.<br>
+        Jika tidak bergerak, pastikan perangkat Anda punya sensor kompas.
+    </div>
+    <script>
+        // Koordinat Kakbah
+        const kaabaLat = 21.4225;
+        const kaabaLng = 39.8262;
+        let userLat = null, userLng = null;
+        let compassHeading = 0;
+
+        // Fungsi hitung arah ke Kakbah (bearing)
+        function calculateBearing(lat1, lon1, lat2, lon2) {
+            const toRad = deg => deg * Math.PI / 180;
+            const toDeg = rad => rad * 180 / Math.PI;
+            const dLon = toRad(lon2 - lon1);
+            lat1 = toRad(lat1);
+            lat2 = toRad(lat2);
+            const y = Math.sin(dLon) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2) -
+                      Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+            let brng = Math.atan2(y, x);
+            brng = toDeg(brng);
+            return (brng + 360) % 360;
+        }
+
+        function requestPermission() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // iOS: Meminta izin eksplisit
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            enableOrientationListener();
+                            getLocation();
+                            document.getElementById('permission-btn').style.display = 'none';
+                        } else {
+                            alert('Izin untuk sensor orientasi perangkat ditolak.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Gagal meminta izin orientasi perangkat:', error);
+                        alert('Gagal meminta izin orientasi perangkat.');
+                    });
+            } else if (typeof DeviceOrientationEvent !== 'undefined') {
+                // Android: Tidak memerlukan izin eksplisit
+                enableOrientationListener();
+                getLocation();
+                document.getElementById('permission-btn').style.display = 'none';
+            } else {
+                // Fallback: Tidak didukung
+                alert('Perangkat Anda tidak mendukung sensor orientasi.');
+            }
+        }
+
+        function enableOrientationListener() {
+            window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+            window.addEventListener('deviceorientation', handleOrientation, true);
+        }
+
+        function handleOrientation(event) {
+            let alpha = event.alpha;
+            if (typeof event.webkitCompassHeading !== "undefined") {
+                alpha = event.webkitCompassHeading; // iOS
+            }
+            if (alpha !== null) {
+                compassHeading = alpha;
+                document.getElementById('needle').style.transform =
+                    `translate(-50%, -100%) rotate(${-alpha}deg)`;
+                updateKaabaNeedle();
+            }
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    userLat = position.coords.latitude;
+                    userLng = position.coords.longitude;
+                    updateKaabaNeedle();
+                }, function() {
+                    alert('Gagal mendapatkan lokasi.');
+                });
+            } else {
+                alert('Geolocation tidak didukung browser ini.');
+            }
+        }
+
+        function updateKaabaNeedle() {
+            if (userLat !== null && userLng !== null) {
+                const bearing = calculateBearing(userLat, userLng, kaabaLat, kaabaLng);
+                // Sudut jarum Kakbah relatif terhadap utara kompas
+                const relativeAngle = bearing - compassHeading;
+                document.getElementById('needle-kaaba').style.transform =
+                    `translate(-50%, -100%) rotate(${relativeAngle}deg)`;
+            }
+        }
+
+        document.getElementById('permission-btn').addEventListener('click', requestPermission);
+    </script>
+</body>
+</html>

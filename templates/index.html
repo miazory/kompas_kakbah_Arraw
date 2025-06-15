@@ -64,20 +64,6 @@
             font-size: 1em;
             text-align: center;
         }
-        #permission-btn {
-            margin-top: 20px;
-            padding: 10px 24px;
-            font-size: 1.1em;
-            border: none;
-            border-radius: 8px;
-            background: #007bff;
-            color: #fff;
-            cursor: pointer;
-            box-shadow: 0 2px 8px #007bff22;
-        }
-        #permission-btn:active {
-            background: #0056b3;
-        }
     </style>
 </head>
 <body>
@@ -91,12 +77,12 @@
             <div id="needle-kaaba"></div>
         </div>
     </div>
-    <button id="permission-btn">Aktifkan Kompas</button>
     <div id="info">
-        Klik tombol di atas dan izinkan akses sensor & lokasi.<br>
+        Kompas dan arah Kakbah.<br>
         Jarum <span style="color:red">merah</span> = utara.<br>
         Jarum <span style="color:green">hijau</span> = arah Kakbah.<br>
-        Jika tidak bergerak, pastikan perangkat Anda punya sensor kompas.
+        <!-- Jika tidak bergerak, pastikan perangkat Anda punya sensor kompas.<br>
+        <span style="color:#c00">* Di iPhone/iPad, Anda tetap harus klik layar untuk mengaktifkan sensor.</span> -->
     </div>
     <script>
         // Koordinat Kakbah
@@ -105,7 +91,6 @@
         let userLat = null, userLng = null;
         let compassHeading = 0;
 
-        // Fungsi hitung arah ke Kakbah (bearing)
         function calculateBearing(lat1, lon1, lat2, lon2) {
             const toRad = deg => deg * Math.PI / 180;
             const toDeg = rad => rad * 180 / Math.PI;
@@ -122,28 +107,27 @@
 
         function requestPermission() {
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                // iOS: Meminta izin eksplisit
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            enableOrientationListener();
-                            getLocation();
-                            document.getElementById('permission-btn').style.display = 'none';
-                        } else {
-                            alert('Izin untuk sensor orientasi perangkat ditolak.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Gagal meminta izin orientasi perangkat:', error);
-                        alert('Gagal meminta izin orientasi perangkat.');
-                    });
+                // iOS: HARUS interaksi user, jadi tampilkan instruksi
+                document.body.addEventListener('click', function iosPermission() {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(permissionState => {
+                            if (permissionState === 'granted') {
+                                enableOrientationListener();
+                                getLocation();
+                            } else {
+                                alert('Izin sensor orientasi ditolak.');
+                            }
+                        })
+                        .catch(error => {
+                            alert('Gagal meminta izin sensor orientasi.');
+                        });
+                    document.body.removeEventListener('click', iosPermission);
+                });
             } else if (typeof DeviceOrientationEvent !== 'undefined') {
-                // Android: Tidak memerlukan izin eksplisit
+                // Android: langsung aktif
                 enableOrientationListener();
                 getLocation();
-                document.getElementById('permission-btn').style.display = 'none';
             } else {
-                // Fallback: Tidak didukung
                 alert('Perangkat Anda tidak mendukung sensor orientasi.');
             }
         }
@@ -183,14 +167,14 @@
         function updateKaabaNeedle() {
             if (userLat !== null && userLng !== null) {
                 const bearing = calculateBearing(userLat, userLng, kaabaLat, kaabaLng);
-                // Sudut jarum Kakbah relatif terhadap utara kompas
                 const relativeAngle = bearing - compassHeading;
                 document.getElementById('needle-kaaba').style.transform =
                     `translate(-50%, -100%) rotate(${relativeAngle}deg)`;
             }
         }
 
-        document.getElementById('permission-btn').addEventListener('click', requestPermission);
+        // Otomatis aktif saat halaman dimuat
+        requestPermission();
     </script>
 </body>
 </html>

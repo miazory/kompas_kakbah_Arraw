@@ -1,5 +1,6 @@
-Struktur
+## Structure
 
+```
 simple-compass-app
 ├── app.py              # Main application file
 ├── static

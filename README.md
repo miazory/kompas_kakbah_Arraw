@@ -1,5 +1,5 @@
+Struktur
 
-```
 simple-compass-app
 ├── app.py              # Main application file
 ├── static
@@ -16,8 +16,6 @@ RESULT
 
 
 ## Requirements
-
-To run this application, you need to have Python installed along with the required libraries. You can install the necessary dependencies using the following command:
 
 ```
 pip install -r requirements.txt
@@ -37,5 +35,5 @@ pip install -r requirements.txt
    python app.py
    ```
 
-3. Open your web browser and go to `http://127.0.0.1:5000` to view the compass.
+3. Open your web browser and go to `http://127.0.0.1:5000`
 

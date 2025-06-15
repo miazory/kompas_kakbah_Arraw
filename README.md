@@ -1,4 +1,4 @@
-## Project Structure
+![image](https://github.com/user-attachments/assets/d88af28e-b7c4-4c01-a86e-c8de3b21c3ba)## Project Structure
 
 ```
 simple-compass-app
@@ -10,6 +10,11 @@ simple-compass-app
 ├── requirements.txt     # List of dependencies
 └── README.md           # Project documentation
 ```
+
+RESULT
+
+![Screenshot 2025-06-15 184751](https://github.com/user-attachments/assets/eb5c2ad5-45aa-45cc-984a-213304081bed)
+
 
 ## Requirements
 
@@ -34,3 +39,4 @@ pip install -r requirements.txt
    ```
 
 3. Open your web browser and go to `http://127.0.0.1:5000` to view the compass.
+

@@ -13,7 +13,8 @@ simple-compass-app
 
 ## RESULT
 
-![Screenshot 2025-06-15 184751](https://github.com/user-attachments/assets/eb5c2ad5-45aa-45cc-984a-213304081bed)
+![image](https://github.com/user-attachments/assets/da36cddc-814d-4914-a42d-701af2a414cd)
+
 
 
 ## Requirements

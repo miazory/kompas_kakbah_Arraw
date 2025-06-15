@@ -11,6 +11,12 @@ simple-compass-app
 └── README.md           # Project documentation
 ```
 
+## RESULT
+
+![image](https://github.com/user-attachments/assets/da36cddc-814d-4914-a42d-701af2a414cd)
+
+
+
 ## Requirements
 
 To run this application, you need to have Python installed along with the required libraries. You can install the necessary dependencies using the following command:
